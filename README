@@ -1,0 +1,8 @@
+ImageInfo - written by Larry Bank
+
+A command line tool to quickly display information about image files. ImageInfo
+was written as a lightweight replacement for ImageMagick's Identify program.
+If you're only interested in identifying an image type and it's size, the tiny
+size of the ImageInfo executable and its behavior of reading the minimum number
+of bytes to identify a file allows it to run several orders of magnitude faster
+than the Identify program.
