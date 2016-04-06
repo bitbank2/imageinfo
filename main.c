@@ -14,6 +14,7 @@
 // Version 1.1 released 9/5/2013
 // 12/5/14 - modified for Linux/Mac
 // Version 1.2 released 12/5/2014
+// Version 1.3 released 4/6/2016
 //
 #include "my_windows.h"
 #include <stdio.h>
@@ -34,7 +35,7 @@
 typedef unsigned int uint32_t;
 
 const char *szType[] = {"Unknown", "PNG","JFIF","Win BMP","OS/2 BMP","TIFF","GIF","Portable Pixmap","Targa","JEDMICS","CALS"};
-const char *szComp[] = {"Unknown", "Flate","JPEG","None","RLE","LZW","G3","G4","Packbits","Modified Huffman","Thunderscan RLE"};
+const char *szComp[] = {"Unknown", "Flate","JPEG","None","RLE","LZW","G3","G4","Packbits","Modified Huffman","Thunderscan RLE","JBIG (T.85)"};
 const char *szPhotometric[] = {"WhiteIsZero","BlackIsZero","RGB","Palette Color","Transparency Mask","CMYK","YCbCr","Unknown"};
 const char *szPlanar[] = {"Unknown","Chunky","Planar"};
 
@@ -65,7 +66,8 @@ enum
     COMPTYPE_G4,
     COMPTYPE_PACKBITS,
     COMPTYPE_HUFFMAN,
-    COMPTYPE_THUNDERSCAN
+    COMPTYPE_THUNDERSCAN,
+    COMPTYPE_JBIG
 };
 
 /****************************************************************************
@@ -492,6 +494,8 @@ void ProcessFile(char *szFileName, int iFileSize)
                             iCompression = COMPTYPE_JPEG;
                         else if (k == 8 || k == 32946)
                             iCompression = COMPTYPE_FLATE;
+			else if (k == 9)
+			    iCompression = COMPTYPE_JBIG;
                         else if (k == 32773)
                             iCompression = COMPTYPE_PACKBITS;
                         else if (k == 32809)
@@ -554,6 +558,12 @@ int main( int argc, char *argv[ ])
     {
         PILIOGetCurDir(256, szDir);
         strcpy(szFile, szDir);
+        iLen = strlen(szFile);
+	if (szFile[iLen-1] != PILIO_SLASH_CHAR) // add missing slash
+	{
+		szFile[iLen] = PILIO_SLASH_CHAR;
+		szFile[iLen+1] = '\0';
+	}
         strcat(szFile, argv[1]); // create a complete pathname
     }
     else // Extract the directory from the pathname passed
