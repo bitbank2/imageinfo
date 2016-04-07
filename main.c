@@ -542,7 +542,7 @@ int main( int argc, char *argv[ ])
     
     if (argc != 2)
     {
-        printf("Image Info 1.2 Copyright (c) 2012-2014 BitBank Software, Inc.\n");
+        printf("Image Info 1.3 Copyright (c) 2012-2014 BitBank Software, Inc.\n");
         printf("Usage: IMAGEINFO <pathname>\n");
         printf("Supports: TIFF,GIF,JPEG,BMP,PNG,PBM,PGM,PPM,TGA,JEDMICS,CALS\n");
         return 0;
