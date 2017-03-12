@@ -15,6 +15,8 @@
 // 12/5/14 - modified for Linux/Mac
 // Version 1.2 released 12/5/2014
 // Version 1.3 released 4/6/2016
+// 3/10/17 added support for PCX files
+// Version 1.4 released 3/10/2017
 //
 #include "my_windows.h"
 #include <stdio.h>
@@ -34,7 +36,7 @@
 
 typedef unsigned int uint32_t;
 
-const char *szType[] = {"Unknown", "PNG","JFIF","Win BMP","OS/2 BMP","TIFF","GIF","Portable Pixmap","Targa","JEDMICS","CALS"};
+const char *szType[] = {"Unknown", "PNG","JFIF","Win BMP","OS/2 BMP","TIFF","GIF","Portable Pixmap","Targa","JEDMICS","CALS","PCX"};
 const char *szComp[] = {"Unknown", "Flate","JPEG","None","RLE","LZW","G3","G4","Packbits","Modified Huffman","Thunderscan RLE","JBIG (T.85)"};
 const char *szPhotometric[] = {"WhiteIsZero","BlackIsZero","RGB","Palette Color","Transparency Mask","CMYK","YCbCr","Unknown"};
 const char *szPlanar[] = {"Unknown","Chunky","Planar"};
@@ -51,7 +53,8 @@ enum
     FILETYPE_PPM,
     FILETYPE_TARGA,
     FILETYPE_JEDMICS,
-    FILETYPE_CALS
+    FILETYPE_CALS,
+    FILETYPE_PCX
 };
 
 enum
@@ -214,8 +217,13 @@ void ProcessFile(char *szFileName, int iFileSize)
     {
         if (cBuf[14] == 0x28) // Windows
             iFileType = FILETYPE_BMP;
-        else
+        else 
             iFileType = FILETYPE_OS2BMP;
+    }
+
+    else if (cBuf[0] == 0x0a && cBuf[1] < 0x6 && cBuf[2] == 0x01)
+    {
+	iFileType = FILETYPE_PCX;
     }
     else if (INTELLONG(cBuf) == 0x80 && (cBuf[36] == 4 || cBuf[36] == 6))
     {
@@ -253,6 +261,13 @@ void ProcessFile(char *szFileName, int iFileSize)
     // Get info specific to each type of file
     switch (iFileType)
     {
+	case FILETYPE_PCX:
+	   iWidth = 1 + INTELSHORT(&cBuf[8]) - INTELSHORT(&cBuf[4]);
+           iHeight = 1 + INTELSHORT(&cBuf[10]) - INTELSHORT(&cBuf[6]);
+	   iCompression = COMPTYPE_PACKBITS;
+	   iBpp = cBuf[3] * cBuf[65];
+	   break;
+
         case FILETYPE_PNG:
             if (MOTOLONG(&cBuf[12]) == 0x49484452/*'IHDR'*/)
             {
@@ -542,9 +557,9 @@ int main( int argc, char *argv[ ])
     
     if (argc != 2)
     {
-        printf("Image Info 1.3 Copyright (c) 2012-2014 BitBank Software, Inc.\n");
+        printf("Image Info 1.4 Copyright (c) 2012-2017 BitBank Software, Inc.\n");
         printf("Usage: IMAGEINFO <pathname>\n");
-        printf("Supports: TIFF,GIF,JPEG,BMP,PNG,PBM,PGM,PPM,TGA,JEDMICS,CALS\n");
+        printf("Supports: TIFF,GIF,JPEG,BMP,PNG,PBM,PGM,PPM,TGA,JEDMICS,CALS,PCX\n");
         return 0;
     }
     // Find the source dir since FindFirstFile only returns leaf names
