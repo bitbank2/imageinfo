@@ -13,5 +13,5 @@ pil_io.o: pil_io.c
 	$(CC) $(CFLAGS) pil_io.c
 
 clean:
-	rm -rf *o imageinfo
+	rm -rf *.o imageinfo
 

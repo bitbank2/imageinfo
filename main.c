@@ -18,6 +18,18 @@
 // 3/10/17 added support for PCX files
 // Version 1.4 released 3/10/2017
 //
+// Copyright 2012 BitBank Software, Inc. All Rights Reserved.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===========================================================================
+
 #include "my_windows.h"
 #include <stdio.h>
 #include <string.h>
@@ -36,6 +48,7 @@
 
 typedef unsigned int uint32_t;
 
+const char *szJPEGTypes[] = {"BASELINE", "EXTENDED", "PROGRESSIVE", "LOSSLESS"};
 const char *szType[] = {"Unknown", "PNG","JFIF","Win BMP","OS/2 BMP","TIFF","GIF","Portable Pixmap","Targa","JEDMICS","CALS","PCX"};
 const char *szComp[] = {"Unknown", "Flate","JPEG","None","RLE","LZW","G3","G4","Packbits","Modified Huffman","Thunderscan RLE","JBIG (T.85)"};
 const char *szPhotometric[] = {"WhiteIsZero","BlackIsZero","RGB","Palette Color","Transparency Mask","CMYK","YCbCr","Unknown"};
@@ -437,7 +450,8 @@ void ProcessFile(char *szFileName, int iFileSize)
                 iWidth = MOTOSHORT(&cBuf[i+7]);
                 iBpp = iBpp * cBuf[i+9]; /* Bpp = number of components * bits per sample */
                 ucSubSample = cBuf[i+11];
-                sprintf(szOptions, ", color subsampling = %d:%d", (ucSubSample>>4),(ucSubSample & 0xf));
+                iMarker = MOTOSHORT(&cBuf[i]);
+                sprintf(szOptions, ", type = %s, color subsampling = %d:%d", szJPEGTypes[iMarker & 3], (ucSubSample>>4),(ucSubSample & 0xf));
             }
             break;
         case FILETYPE_GIF:
