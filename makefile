@@ -4,7 +4,7 @@ LIBS =
 all: imageinfo
 
 imageinfo: main.o pil_io.o
-	$(CC) main.obj pil_io.obj $(LIBS) -o imageinfo
+	$(CC) main.o pil_io.o $(LIBS) -o imageinfo
 
 main.o: main.c
 	$(CC) $(CFLAGS) main.c
@@ -13,5 +13,5 @@ pil_io.o: pil_io.c
 	$(CC) $(CFLAGS) pil_io.c
 
 clean:
-	del *.o imageinfo
+	rm -rf *.o imageinfo
 
