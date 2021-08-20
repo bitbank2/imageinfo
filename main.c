@@ -560,7 +560,7 @@ process_exit:
  ****************************************************************************/
 int main( int argc, char *argv[ ])
 {
-#ifdef _WIN32
+#ifdef _WIN32_bad
     PILIOFINDFILE ff;
     void * iHandle;
     BOOL bMoreFiles;
@@ -622,7 +622,7 @@ int main( int argc, char *argv[ ])
             return -1; // none found, leave
         }
     }
-#ifdef _WIN32
+#ifdef _WIN32_bad
     iHandle = PILIOFindFirst(szFile, &ff);
     if (iHandle == -1)
     {

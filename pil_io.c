@@ -38,7 +38,9 @@
 #include <stdio.h>
 #include <stdint.h>
 //#include <android/log.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <errno.h>
 #include <string.h>
 #include <time.h>
@@ -115,34 +117,6 @@ struct tm *localTime;
 	pDate->iSecond = localTime->tm_sec;
 
 } /* PILIODate() */
-
-int PILIOMsgBox(char *szMsg, char *szTitle)
-{
-#ifdef _WIN32
-int iSum;
-
-   iSum = PILIOCheckSum(szMsg) + PILIOCheckSum(szTitle);
-   MessageBox(HWND_DESKTOP, szMsg, szTitle, MB_OK | MB_ICONSTOP);
-   return iSum;
-#else
-	// Do nothing if it's not under Windows
-	while (1);
-#endif
-} /* PILIOMsgBox() */
-
-/****************************************************************************
- *                                                                          *
- *  FUNCTION   : PILIOSignalThread(DWORD threadID, UINT msg, WPARAM wParam) *
- *                                                                          *
- *  PURPOSE    : Signal a sub thread to execute a command                   *
- *                                                                          *
- *  PARAMETERS : Thread ID, msg, param1, param 2                            *
- *                                                                          *
- ****************************************************************************/
-void PILIOSignalThread(unsigned long dwTID, unsigned int iMsg, unsigned long wParam, unsigned long lParam)
-{
-//   PostThreadMessage(dwTID, iMsg, (WPARAM)wParam, (LPARAM)lParam);
-} /* PILIOSignalThread() */
 
 /****************************************************************************
  *                                                                          *
@@ -395,91 +369,18 @@ void PILIOClose(void * iHandle)
  ****************************************************************************/
 void * PILIOAlloc(unsigned long size)
 {
-	void *p = NULL;
+    void *p = NULL;
     void* i;
-    int j;
 
 	   if (size == 0)
           {
           return NULL; // Linux seems to return a non-NULL pointer for 0 size
           }
 
-	   i = (void *)malloc(size+16);
-	   if (i)
-	      {
-		  j = 16-((int)(intptr_t)i & 0xf); // make it 16-byte aligned
-		  memset((void *)i, j, j);
-		  p = (void *)(i+j);
-	      memset(p, 0, size);
-	      }
-//	   if (bTraceMem)
-//	   {
-//	        TraceAdd((void *)p, size);
-//	   }
-#ifdef LOG_MEM
-	   __android_log_print(ANDROID_LOG_VERBOSE, "PILIOAlloc", "size = 0x%x, ptr=%08x", (unsigned int)size, (int)p);
-#endif // LOG_MEM
+	   i = malloc(size);
 	   return p;
    
 } /* PILIOAlloc() */
-
-/****************************************************************************
- *                                                                          *
- *  FUNCTION   : PILIOAllocNoClear(long)                                    *
- *                                                                          *
- *  PURPOSE    : Allocate a block of writable memory, no zero-fill.         *
- *                                                                          *
- ****************************************************************************/
-void * PILIOAllocNoClear(unsigned long size)
-{
-	void *p = NULL;
-    void* i;
-    int j;
-
-	if (size == 0)
-       {
-       return NULL; // Linux seems to return a non-NULL pointer for 0 size
-       }
-	i = (void *)malloc(size+16);
-    if (i)
-    {
-       j = 16-((int)(intptr_t)i & 0xf); // make it 16-byte aligned
-       memset((void *)i, j, j);
-       p = (void *)(i+j);
-    }
-#ifdef LOG_MEM
-	   __android_log_print(ANDROID_LOG_VERBOSE, "PILIOAllocNoClear", "size = 0x%x, ptr=%08x", (unsigned int)size, (int)p);
-#endif // LOG_MEM
-	return p;
-   
-} /* PILIOAllocNoClear() */
-
-/****************************************************************************
- *                                                                          *
- *  FUNCTION   : PILIOAllocOutbuf(long)                                     *
- *                                                                          *
- *  PURPOSE    : Allocate a block of writable memory.                       *
- *                                                                          *
- ****************************************************************************/
-void * PILIOAllocOutbuf(void)
-{
-void *p = NULL;
-void * i;
-int j;
-
-   i = (void *)malloc(MAX_SIZE+16);
-   if (i)
-   {
-      j = 16-((int)(intptr_t)i & 0xf); // make it 16-byte aligned
-      memset((void *)i, j, j);
-      p = (void *)(i+j);
-	  memset(p, 0, MAX_SIZE);
-	  }
-#ifdef LOG_MEM
-	   __android_log_print(ANDROID_LOG_VERBOSE, "PILIOAllocOutbuf", "size = 0x%x, ptr=%08x", (unsigned int)(MAX_SIZE+16), (int)p);
-#endif // LOG_MEM
-   return p;
-} /* PILIOAllocOutbuf() */
 
 /****************************************************************************
  *                                                                          *
@@ -490,25 +391,9 @@ int j;
  ****************************************************************************/
 void PILIOFree(void *p)
 {
-	unsigned char *puc = (unsigned char *)p;
-	unsigned char ucOff;
-
-	   if (bTraceMem)
-	   {
-	        TraceRemove((void *)p);
-#ifdef LOG_MEM
-	        __android_log_print(ANDROID_LOG_VERBOSE, "PILIOFree", "ptr=%08x, total size = 0x%x", (int)(intptr_t)p, iTotalMem);
-#endif
-	   }
     if (p == NULL || p == (void *)-1)
        return; /* Don't try to free bogus pointer */
-	ucOff = puc[-1]; // how many bytes do we have to adjust to point to start of real buffer?
-	if (ucOff > 0 && ucOff <= 16)
-	   puc = &puc[-ucOff];
-#ifdef LOG_MEM
-	   __android_log_print(ANDROID_LOG_VERBOSE, "PILIOFree", "ptr=%08x", (int)p);
-#endif // LOG_MEM
-	free((void *)puc);
+	free(p);
 } /* PILIOFree() */
 
 /****************************************************************************
@@ -526,29 +411,6 @@ void PILIOGetCurDir(int iMaxLen, char *szPath)
 {
     getcwd(szPath, iMaxLen);
 } /* PILIOGetCurDir() */
-
-/****************************************************************************
- *                                                                          *
- *  FUNCTION   : PILIOFreeOutbuf(void *)                                    *
- *                                                                          *
- *  PURPOSE    : Free a block of writable memory.                           *
- *                                                                          *
- ****************************************************************************/
-void PILIOFreeOutbuf(void *p)
-{
-	unsigned char *puc = (unsigned char *)p;
-	unsigned char ucOff;
-
-	if (p == NULL || p == (void *)-1)
-      return; /* Don't try to free bogus pointer */
-	ucOff = puc[-1]; // how many bytes do we have to adjust to point to start of real buffer?
-	if (ucOff > 0 && ucOff <= 16)
-	   puc = &puc[-ucOff];
-#ifdef LOG_MEM
-	   __android_log_print(ANDROID_LOG_VERBOSE, "PILIOFreeOutbuf", "ptr=%08x", (int)p);
-#endif // LOG_MEM
-   free((void *)puc);
-} /* PILIOFree() */
 
 /****************************************************************************
  *                                                                          *

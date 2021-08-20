@@ -6,3 +6,11 @@ If you're only interested in identifying an image type and it's size, the tiny
 size of the ImageInfo executable and its behavior of reading the minimum number
 of bytes to identify a file allows it to run several orders of magnitude faster
 than the Identify program.
+
+For MacOS + Linux:
+make
+./imageinfo <filename>
+
+For Windows:
+nmake -f make_windows
+imageinfo <filename>
